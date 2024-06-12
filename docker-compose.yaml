@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15.6-alpine3.19
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # build:
+    #   context: .
+    #   dockerfile: postgres.dockerfile
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"] 
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  greenlight:
+    build: ./
+    ports:
+      - "${PORT}:${PORT}"
+      # - "4000:4000"
+      # - "8080:8080"
+    volumes:
+      - ./:/usr/src/app
+    environment:
+      GREENLIGHT_DB_DSN: ${GREENLIGHT_DB_DSN}
+      PORT: ${PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+
+ 
+volumes:
+  pgdata:
+ 
